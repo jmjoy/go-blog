@@ -1,0 +1,33 @@
+{{template "main" .}}
+{{define "content"}}
+<div class="container">
+	<br /><br /><br />
+	<div class="col-md-offset-4 col-md-4">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<h3 class="panel-title">go-blog 后台管理</h3>
+			</div>	<!-- /panel-heading -->
+			<div class="panel-body">
+				{{if .errMsg}}
+				<div class="alert alert-danger alert-dismissible" role="alert">
+					<button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">&times;</span>
+						<span class="sr-only">Close</span>
+					</button>
+					<strong>{{.errMsg}}</strong>
+				</div>	<!-- /alert -->
+				{{end}}
+				<form role="form" action="/admin/handle-sign-in" method="post">
+					<div class="form-group">
+						<input type="text" class="form-control" id="name" name="name" value="{{.errName}}" placeholder="请输入管理员账号">
+					</div>
+					<div class="form-group">
+						<input type="password" class="form-control" id="password" name="password" placeholder="请输入密码">
+					</div>
+					<hr />
+					<button type="submit" class="btn btn-block btn-info">登陆</button>
+				</form>
+			</div>	<!-- /panel-body -->
+		</div>	<!-- /panel-default -->
+	</div>	
+</div>
+{{end}}

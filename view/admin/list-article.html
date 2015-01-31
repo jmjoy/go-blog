@@ -1,0 +1,63 @@
+{{template "main"}}
+{{define "content"}}
+<div class="container">
+	<div class="row">
+		<h1 class="col-md-6">文章列表</h1>
+		<h4 class="col-md-6 text-right">
+			[Admin] : <a href="#" class="btn btn-sm btn-danger">注销</a>
+		</h4>
+	</div>
+	<div class="row">
+		<div class="col-md-1">
+			<a href="/admin/add-article" class="btn btn-default">添加文章</a>
+		</div>
+		<div class="col-md-4">
+			<div class="input-group">
+				<input type="text" class="form-control">
+				<span class="input-group-btn">
+					<button class="btn btn-default" type="button">
+						<span class="glyphicon glyphicon-search" aria-hidden="true"></span>						
+					</button>
+				</span>
+			</div><!-- /input-group -->
+		</div>
+	</div>
+	<hr />
+	<table class="table table-bordered table-striped table-hover">
+		<thead>
+			<th>ID</th>
+			<th>标题</th>
+			<th>创建时间</th>
+			<th>修改时间</th>
+			<th>操作</th>
+		</thead>
+		<tbody>
+			<tr>
+				<td>1</td>
+				<td>你好</td>
+				<td>2011-11-25 10:21:12</td>
+				<td>2011-11-25 10:21:12</td>
+				<td>
+					<a href="" class="btn btn-info btn-xs">查看</a>
+					<a href="" class="btn btn-warning btn-xs">修改</a>
+					<button type="button" class="btn btn-danger btn-xs">删除</button>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+	<nav>
+		<ul class="pagination">
+			<li class="disabled"><a href="#">共 x 页， 第 x 页</a></li>
+	    	<li><a href="#"><span aria-hidden="true">First</span><span class="sr-only">Previous</span></a></li>
+	    	<li><a href="#"><span aria-hidden="true">&laquo;</span><span class="sr-only">Previous</span></a></li>
+			<li class="active"><a href="#">1 <span class="sr-only">(current)</span></a></li>
+		    <li><a href="#">2</a></li>
+		    <li><a href="#">3</a></li>
+		    <li><a href="#">4</a></li>
+		    <li><a href="#">5</a></li>
+		    <li><a href="#"><span aria-hidden="true">&raquo;</span><span class="sr-only">Next</span></a></li>
+		    <li><a href="#"><span aria-hidden="true">Last</span><span class="sr-only">Next</span></a></li>
+		</ul>
+	</nav>	
+</div>
+{{end}}
