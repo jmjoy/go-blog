@@ -1,6 +1,7 @@
 package model
 
 import (
+	"../component/session"
 	"database/sql"
 	"errors"
 	_ "github.com/mattn/go-sqlite3"
@@ -8,6 +9,7 @@ import (
 
 // 公共模型类
 type Model struct {
+	Sess session.Session
 }
 
 type dbOperateFunc func(db *sql.DB) error

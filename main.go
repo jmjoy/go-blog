@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "./component/session" // 运行Session的gc
 	"./controller"
 	"net/http"
 )

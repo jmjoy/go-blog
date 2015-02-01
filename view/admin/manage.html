@@ -1,10 +1,10 @@
-{{template "main"}}
+{{template "main" .}}
 {{define "content"}}
 <div class="container">
 	<div class="row">
 		<h1 class="col-md-6">文章列表</h1>
 		<h4 class="col-md-6 text-right">
-			[Admin] : <a href="#" class="btn btn-sm btn-danger">注销</a>
+			[{{.adminName}}] : <a href="/admin/handle-sign-out" class="btn btn-sm btn-danger">注销</a>
 		</h4>
 	</div>
 	<div class="row">
