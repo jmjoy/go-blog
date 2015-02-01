@@ -12,6 +12,7 @@ func RouteHome() {
 	c := new(HomeController)
 	http.HandleFunc("/", c.Index)
 	http.HandleFunc("/home", c.Index)
+	http.HandleFunc("/home/", c.Index)
 	http.HandleFunc("/home/index", c.Index)
 }
 

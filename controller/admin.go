@@ -2,6 +2,7 @@ package controller
 
 import (
 	"../model"
+	"fmt"
 	"net/http"
 )
 
@@ -22,7 +23,8 @@ func RouteAdmin() {
 	http.HandleFunc("/admin/handle-sign-in", c.HandleSignIn)
 	http.HandleFunc("/admin/handle-sign-out", c.HandleSignOut)
 	http.HandleFunc("/admin/manage", c.Manage)
-	http.HandleFunc("/admin/add-article", c.AddArticle)
+	http.HandleFunc("/admin/upsert-article", c.UpsertArticle)
+	http.HandleFunc("/admin/handle-upsert-article", c.HandleUpsertArticle)
 }
 
 // 登陆
@@ -68,8 +70,7 @@ func (this *AdminController) HandleSignIn(w http.ResponseWriter, r *http.Request
 // 处理注销请求
 func (this *AdminController) HandleSignOut(w http.ResponseWriter, r *http.Request) {
 	// 检测有没有登陆
-	_, had := this.hadSignIn(w, r)
-	if !had {
+	if _, had := this.hadSignIn(w, r); !had {
 		this.notSignIn(w, r)
 		return
 	}
@@ -87,14 +88,49 @@ func (this *AdminController) Manage(w http.ResponseWriter, r *http.Request) {
 		this.notSignIn(w, r)
 		return
 	}
-	data := map[string]string{
+	// 获取文章列表
+	res, err := adminModel.ListArticle("0", "100")
+	// 出现罕见数据库查询错误
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	data := map[string]interface{}{
 		"adminName": adminName,
+		"resArr":    res,
 	}
 	this.render(w, "admin/manage", data)
 }
 
-func (this *AdminController) AddArticle(w http.ResponseWriter, r *http.Request) {
-	this.render(w, "admin/add-article", nil)
+// 增加文章页面
+func (this *AdminController) UpsertArticle(w http.ResponseWriter, r *http.Request) {
+	// 检测有没有登陆
+	if _, had := this.hadSignIn(w, r); !had {
+		this.notSignIn(w, r)
+		return
+	}
+	this.render(w, "admin/upsert-article", nil)
+}
+
+// 处理文章增加或者修改
+func (this *AdminController) HandleUpsertArticle(w http.ResponseWriter, r *http.Request) {
+	// 检测有没有登陆
+	if _, had := this.hadSignIn(w, r); !had {
+		this.notSignIn(w, r)
+		return
+	}
+	// 获取Form表单的数据
+	id := r.FormValue("id")
+	title := r.FormValue("title")
+	content := r.FormValue("content")
+	// 插入或更新文章
+	err := adminModel.HandleUpsertArticle(id, title, content)
+	// 出现罕见的错误
+	if err != nil {
+		fmt.Fprintln(w, err.Error())
+		return
+	}
+	// 成功
+	http.Redirect(w, r, "/admin/manage", 302)
 }
 
 // 检查有没有登陆

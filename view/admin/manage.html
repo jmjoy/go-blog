@@ -9,7 +9,7 @@
 	</div>
 	<div class="row">
 		<div class="col-md-1">
-			<a href="/admin/add-article" class="btn btn-default">添加文章</a>
+			<a href="/admin/upsert-article" class="btn btn-default">添加文章</a>
 		</div>
 		<div class="col-md-4">
 			<div class="input-group">
@@ -32,17 +32,19 @@
 			<th>操作</th>
 		</thead>
 		<tbody>
+			{{range .resArr}}
 			<tr>
-				<td>1</td>
-				<td>你好</td>
-				<td>2011-11-25 10:21:12</td>
-				<td>2011-11-25 10:21:12</td>
+				<td>{{.id}}</td>
+				<td>{{.title}}</td>
+				<td>{{.ctime}}</td>
+				<td>{{.mtime}}</td>
 				<td>
 					<a href="" class="btn btn-info btn-xs">查看</a>
 					<a href="" class="btn btn-warning btn-xs">修改</a>
 					<button type="button" class="btn btn-danger btn-xs">删除</button>
 				</td>
 			</tr>
+			{{end}}
 		</tbody>
 	</table>
 	<nav>
