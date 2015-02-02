@@ -3,7 +3,10 @@ package controller
 import (
 	"../model"
 	"fmt"
+	"math"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 type AdminController struct {
@@ -25,6 +28,7 @@ func RouteAdmin() {
 	http.HandleFunc("/admin/manage", c.Manage)
 	http.HandleFunc("/admin/upsert-article", c.UpsertArticle)
 	http.HandleFunc("/admin/handle-upsert-article", c.HandleUpsertArticle)
+	http.HandleFunc("/admin/show-article", c.ShowArticle)
 }
 
 // 登陆
@@ -88,15 +92,63 @@ func (this *AdminController) Manage(w http.ResponseWriter, r *http.Request) {
 		this.notSignIn(w, r)
 		return
 	}
+	// 获取分页参数
+	querys, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	page := "1"
+	if len(querys["page"]) != 0 {
+		page = querys["page"][0]
+	}
+	rowList := 5
 	// 获取文章列表
-	res, err := adminModel.ListArticle("0", "100")
+	res, err := adminModel.ListArticle(page, strconv.Itoa(rowList))
 	// 出现罕见数据库查询错误
 	if err != nil {
 		fmt.Fprint(w, err.Error())
 	}
+	// 获取文章总数
+	count, err := adminModel.CountArticle()
+	// 出现罕见数据库查询错误
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+	}
+	// 获取页数、上一页、下一页
+	pageCount := int(math.Ceil(float64(count) / float64(rowList)))
+	pageInt, _ := strconv.Atoi(page)
+	if pageInt <= 0 {
+		pageInt = 1
+	}
+	prePage := pageInt - 1
+	nextPage := pageInt + 1
+	if nextPage >= pageCount {
+		nextPage = pageCount
+	}
+	preArr := make([]int, 0, 5)
+	for i := pageInt - 5; i < pageInt; i++ {
+		if i < 1 {
+			continue
+		}
+		preArr = append(preArr, i)
+	}
+	nextArr := make([]int, 0, 5)
+	for i := pageInt + 1; i < pageInt+5; i++ {
+		if i > pageCount {
+			continue
+		}
+		nextArr = append(nextArr, i)
+	}
+	// 获取数据和渲染模板
 	data := map[string]interface{}{
 		"adminName": adminName,
 		"resArr":    res,
+		"page":      pageInt,
+		"prePage":   prePage,
+		"nextPage":  nextPage,
+		"pageCount": pageCount,
+		"preArr":    preArr,
+		"nextArr":   nextArr,
 	}
 	this.render(w, "admin/manage", data)
 }
@@ -131,6 +183,30 @@ func (this *AdminController) HandleUpsertArticle(w http.ResponseWriter, r *http.
 	}
 	// 成功
 	http.Redirect(w, r, "/admin/manage", 302)
+}
+
+// 展示文章的内容
+func (this *AdminController) ShowArticle(w http.ResponseWriter, r *http.Request) {
+	// 检测有没有登陆
+	if _, had := this.hadSignIn(w, r); !had {
+		this.notSignIn(w, r)
+		return
+	}
+	// 获取GET参数中id的值
+	querys, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil || len(querys["id"]) <= 0 {
+		fmt.Fprint(w, err.Error())
+		return
+	}
+	id := querys["id"][0]
+	// 数据库查询文章
+	article, err := adminModel.ShowArticle(id)
+	// 罕见错误
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+		return
+	}
+	this.render(w, "admin/show-article", article)
 }
 
 // 检查有没有登陆

@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+// 可以遍历结果集的接口
+type RowScanner interface {
+	Scan(dest ...interface{}) error
+}
+
 // 管理员模型
 type AdminModel struct {
 	Model
@@ -59,12 +64,23 @@ func (this *AdminModel) HadleSignOut(token string) {
 	this.Sess.Drop(token)
 }
 
+// 统计文章数量
+func (this *AdminModel) CountArticle() (count int, err error) {
+	err = this.dbOperate(func(db *sql.DB) error {
+		return db.QueryRow("select count(*) from article").Scan(&count)
+	})
+	return
+}
+
 // 列出文章
 func (this *AdminModel) ListArticle(page, rowList string) (result []map[string]string, err error) {
 	// 转换成数字
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
 		return
+	}
+	if pageInt <= 0 {
+		pageInt = 1
 	}
 	rowListInt, err := strconv.Atoi(rowList)
 	if err != nil {
@@ -81,21 +97,30 @@ func (this *AdminModel) ListArticle(page, rowList string) (result []map[string]s
 		// 将查询结果放进结果数组
 		var i int
 		for rows.Next() {
-			var id, ctime, mtime int
-			var title string
-			if err = rows.Scan(&id, &title, &ctime, &mtime); err != nil {
+			row, err := this.pushSingleArticleWithoutContent(rows)
+			if err != nil {
 				return err
-			}
-			row := map[string]string{
-				"id":    strconv.Itoa(id),
-				"title": title,
-				"ctime": mytime.GetDateTime(int64(ctime)),
-				"mtime": mytime.GetDateTime(int64(mtime)),
 			}
 			result = append(result, row)
 			i++
 		}
 		return nil
+	})
+	return
+}
+
+// 展示文章的内容
+func (this *AdminModel) ShowArticle(id string) (article map[string]string, err error) {
+	// 将文章id转成数字
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return
+	}
+	// 根据文章的id查找文章
+	err = this.dbOperate(func(db *sql.DB) error {
+		rows := db.QueryRow("select * from article where id = ? limit 1", idInt)
+		article, err = this.pushSingleArticle(rows)
+		return err
 	})
 	return
 }
@@ -139,4 +164,39 @@ func (this *AdminModel) validatePassword(password, corrPasswd string) bool {
 		return false
 	}
 	return true
+}
+
+// 从结果集获取一个文章的数组
+func (this *AdminModel) pushSingleArticleWithoutContent(rows RowScanner) (article map[string]string, err error) {
+	var id, ctime, mtime int
+	var title string
+	if err = rows.Scan(&id, &title, &ctime, &mtime); err != nil {
+		return
+	}
+	// 将获取的数据全转成相应的字符串，放进结果map中
+	article = map[string]string{
+		"id":    strconv.Itoa(id),
+		"title": title,
+		"ctime": mytime.GetDateTime(int64(ctime)),
+		"mtime": mytime.GetDateTime(int64(mtime)),
+	}
+	return
+}
+
+// 从结果集获取一个文章的数组
+func (this *AdminModel) pushSingleArticle(rows RowScanner) (article map[string]string, err error) {
+	var id, ctime, mtime int
+	var title, content string
+	if err = rows.Scan(&id, &title, &content, &ctime, &mtime); err != nil {
+		return
+	}
+	// 将获取的数据全转成相应的字符串，放进结果map中
+	article = map[string]string{
+		"id":      strconv.Itoa(id),
+		"title":   title,
+		"content": content,
+		"ctime":   mytime.GetDateTime(int64(ctime)),
+		"mtime":   mytime.GetDateTime(int64(mtime)),
+	}
+	return
 }
