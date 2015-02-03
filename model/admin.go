@@ -189,6 +189,7 @@ func (this *AdminModel) Ueditor(action, callback string, file multipart.File, he
 	// 上传图片，涂鸦，视频，文件
 	case "uploadimage", "uploadscrawl", "uploadvideo", "uploadfile":
 		result = this.actionUpload(action, file, header)
+	// TODO
 	// 列出图片
 	//case 'listimage':
 	//    $result = include("action_list.php");

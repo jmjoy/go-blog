@@ -17,7 +17,15 @@ https://github.com/beego/bee
 
 使用了sqlite3数据库，挺好用的。
 
-位置："./db/blog.sq3"
+http://www.sqlite.org
+
+位置：  ./db/blog.sq3
+
+## 编辑器
+
+使用了百度的UEditor
+
+http://ueditor.baidu.com/website
 
 ## 后台
 
