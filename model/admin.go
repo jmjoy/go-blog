@@ -148,6 +148,21 @@ func (this *AdminModel) HandleUpsertArticle(id, title, content string) error {
 	})
 }
 
+// 根据id删除文章
+func (this *AdminModel) DelArticle(id string) error {
+	// 将id转成int型
+	idInt, err := strconv.Atoi(id)
+	if err != nil {
+		return err
+	}
+	// 调用数据库方法
+	return this.dbOperate(func(db *sql.DB) error {
+		// 执行删除操作
+		_, err := db.Exec("delete from article where id = ?", idInt)
+		return err
+	})
+}
+
 // 检查有没有登陆
 func (this *AdminModel) HadSignIn(token string) (adminName string, had bool) {
 	adminName = this.Sess.Get(token, "AdminName")

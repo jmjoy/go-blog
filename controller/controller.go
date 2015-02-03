@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -71,4 +72,18 @@ func (this *Controller) getSessionToken(w http.ResponseWriter, r *http.Request) 
 	}
 	// 存在就直接返回
 	return cookie.Value
+}
+
+// 简单地返回json格式的数据
+func (this *Controller) simpleJsonReturn(w http.ResponseWriter, status int, msg string) error {
+	m := map[string]interface{}{
+		"status": status,
+		"msg":    msg,
+	}
+	buff, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	fmt.Fprint(w, string(buff))
+	return nil
 }

@@ -29,6 +29,7 @@ func RouteAdmin() {
 	http.HandleFunc("/admin/upsert-article", c.UpsertArticle)
 	http.HandleFunc("/admin/handle-upsert-article", c.HandleUpsertArticle)
 	http.HandleFunc("/admin/show-article", c.ShowArticle)
+	http.HandleFunc("/admin/del-article", c.DelArticle)
 }
 
 // 登陆
@@ -153,14 +154,39 @@ func (this *AdminController) Manage(w http.ResponseWriter, r *http.Request) {
 	this.render(w, "admin/manage", data)
 }
 
-// 增加文章页面
+// 增加或者修改文章页面
 func (this *AdminController) UpsertArticle(w http.ResponseWriter, r *http.Request) {
 	// 检测有没有登陆
 	if _, had := this.hadSignIn(w, r); !had {
 		this.notSignIn(w, r)
 		return
 	}
-	this.render(w, "admin/upsert-article", nil)
+	// 获取id的值
+	querys, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		fmt.Fprint(w, err.Error())
+		return
+	}
+	// 要传递到模板的数据
+	var data map[string]string
+	if len(querys["id"]) <= 0 {
+		// 如果id的值不存在，说明是增加操作
+		data = map[string]string{
+			"id":      "",
+			"title":   "",
+			"content": "",
+		}
+	} else {
+		// id的值存在，说明是修改操作
+		id := querys["id"][0]
+		article, err := adminModel.ShowArticle(id)
+		if err != nil {
+			fmt.Fprint(w, err.Error())
+			return
+		}
+		data = article
+	}
+	this.render(w, "admin/upsert-article", data)
 }
 
 // 处理文章增加或者修改
@@ -207,6 +233,24 @@ func (this *AdminController) ShowArticle(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	this.render(w, "admin/show-article", article)
+}
+
+// 根据id删除文章
+func (this *AdminController) DelArticle(w http.ResponseWriter, r *http.Request) {
+	// 检测有没有登陆
+	if _, had := this.hadSignIn(w, r); !had {
+		this.notSignIn(w, r)
+		return
+	}
+	// 获取输入的id参数
+	id := r.FormValue("id")
+	// 数据库删除
+	err := adminModel.DelArticle(id)
+	if err != nil {
+		this.simpleJsonReturn(w, 400, err.Error())
+		return
+	}
+	this.simpleJsonReturn(w, 200, "")
 }
 
 // 检查有没有登陆

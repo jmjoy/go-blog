@@ -1,19 +1,22 @@
-{{template "main"}}
+{{template "main" .}}
 {{define "content"}}
 <!-- 加载编辑器的容器 -->
 <div class="container">
 	<form role="form" action="/admin/handle-upsert-article" method="post">
-		<h1>添加文章</h1>
+		<h1>编辑文章</h1>
 		<div class="form-group">
 			<label for="title">文章标题</label>
-			<input type="text" class="form-control" id="title" name="title" placeholder="请输入文章标题">
+			<input type="text" class="form-control" id="title" name="title" value="{{.title}}" placeholder="请输入文章标题">
 		</div>
 		<div class="form-group">
 			<label for="content">文章内容</label>
-			<script id="container" id="content" name="content" type="text/plain"></script>
+			<script id="container" id="content" name="content" type="text/plain">
+				{{.content}}
+			</script>
 		</div>
 		<hr />
-		<button type="submit" class="btn btn-default">发表文章</button>
+		<input type="hidden" name="id" value="{{.id}}" />
+		<button type="submit" class="btn btn-default">完成编辑</button>
 	</form>
 </div>
 <!-- 配置文件 -->

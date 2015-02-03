@@ -43,8 +43,8 @@
 				<td>{{.mtime}}</td>
 				<td>
 					<a href="/admin/show-article?id={{.id}}" class="btn btn-info btn-xs">查看</a>
-					<a href="" class="btn btn-warning btn-xs">修改</a>
-					<button type="button" class="btn btn-danger btn-xs">删除</button>
+					<a href="/admin/upsert-article?id={{.id}}" class="btn btn-warning btn-xs">修改</a>
+					<button type="button" class="btn btn-danger btn-xs" onclick="delArticle({{.id}})">删除</button>
 				</td>
 			</tr>
 			{{end}}
@@ -68,6 +68,21 @@
 	</nav>	
 </div>
 
-
+<script>
+/**
+ * 根据id删除文章
+ */
+function delArticle(id) {
+	if (!confirm("您确定要删除这篇文章？")) {
+		return
+	}
+	$.post("/admin/del-article", {"id": id}, function(data) {
+		if (data.status != "200") {
+			return alert(data.msg)
+		}
+		location = "/admin/mange?t=" + new Date().getTime()
+	}, "json")
+}
+</script>
 
 {{end}}
