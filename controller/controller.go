@@ -74,6 +74,16 @@ func (this *Controller) getSessionToken(w http.ResponseWriter, r *http.Request) 
 	return cookie.Value
 }
 
+// 返回json数据
+func (this *Controller) jsonReturn(w http.ResponseWriter, data map[string]interface{}) error {
+	buff, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	fmt.Fprint(w, string(buff))
+	return nil
+}
+
 // 简单地返回json格式的数据
 func (this *Controller) simpleJsonReturn(w http.ResponseWriter, status int, msg string) error {
 	m := map[string]interface{}{

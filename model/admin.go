@@ -4,8 +4,17 @@ import (
 	"../helper/mytime"
 	"crypto/sha1"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
+	"io"
+	"io/ioutil"
+	"math/rand"
+	"mime/multipart"
+	"net/url"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -163,6 +172,47 @@ func (this *AdminModel) DelArticle(id string) error {
 	})
 }
 
+// 用于处理UEditor的上传图片、视频之类的请求
+func (this *AdminModel) Ueditor(action, callback string, file multipart.File, header *multipart.FileHeader) (result string) {
+	// 关闭文件
+	if file != nil {
+		defer file.Close()
+	}
+	// 根据action判断是哪种操作
+	switch action {
+	case "config":
+		// 读取文件内容
+		buf, _ := ioutil.ReadFile("./config/ueditor/config.json")
+		// 删除注释
+		reg := regexp.MustCompile(`/\*[\s\S]+?\*/`)
+		result = reg.ReplaceAllString(string(buf), "")
+	// 上传图片，涂鸦，视频，文件
+	case "uploadimage", "uploadscrawl", "uploadvideo", "uploadfile":
+		result = this.actionUpload(action, file, header)
+	// 列出图片
+	//case 'listimage':
+	//    $result = include("action_list.php");
+	//    break;
+	// 列出文件
+	//case 'listfile':
+	//    $result = include("action_list.php");
+	//    break;
+
+	// 抓取远程文件
+	//case 'catchimage':
+	//    $result = include("action_crawler.php");
+	//    break;
+	default:
+		jsonBuf, _ := json.Marshal(map[string]interface{}{"state": "请求地址出错"})
+		result = string(jsonBuf)
+	}
+	// 根据callback参数确定是不是jsonp
+	if callback != "" {
+		result = html.EscapeString(callback) + "(" + result + ")"
+	}
+	return
+}
+
 // 检查有没有登陆
 func (this *AdminModel) HadSignIn(token string) (adminName string, had bool) {
 	adminName = this.Sess.Get(token, "AdminName")
@@ -214,4 +264,46 @@ func (this *AdminModel) pushSingleArticle(rows RowScanner) (article map[string]s
 		"mtime":   mytime.GetDateTime(int64(mtime)),
 	}
 	return
+}
+
+// ueditor上传动作
+func (this *AdminModel) actionUpload(action string, file multipart.File, header *multipart.FileHeader) string {
+	// 设置上传目录
+	var dir string
+	switch action {
+	case "uploadimage", "uploadscrawl":
+		dir = "/static/upload/image"
+	case "uploadvideo":
+		dir = "/static/upload/video"
+	case "uploadfile":
+		dir = "/static/upload/file"
+	}
+	// 格式 {yyyy}{mm}{dd}/{time}{rand:6}
+	now := time.Now()
+	dir = fmt.Sprintf("%s/%d%d%d/%02d%06d",
+		dir, now.Year(), now.Month(), now.Day(), now.Second(), rand.Intn(1000000),
+	)
+	os.MkdirAll("."+dir, 0777)
+	// 写入文件
+	dstFile, err := os.Create("." + dir + "/" + header.Filename)
+	if err != nil {
+		jsonBuf, _ := json.Marshal(map[string]interface{}{"state": err.Error()})
+		return string(jsonBuf)
+	}
+	defer dstFile.Close()
+	size, err := io.Copy(dstFile, file)
+	if err != nil {
+		jsonBuf, _ := json.Marshal(map[string]interface{}{"state": err.Error()})
+		return string(jsonBuf)
+	}
+	// 组装成功返回数据并返回
+	filenameEncoded := url.QueryEscape(header.Filename)
+	jsonBuf, _ := json.Marshal(map[string]interface{}{
+		"state":    "SUCCESS",
+		"url":      dir + "/" + filenameEncoded,
+		"title":    filenameEncoded,
+		"original": filenameEncoded,
+		"size":     size,
+	})
+	return string(jsonBuf)
 }

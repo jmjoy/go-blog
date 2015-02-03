@@ -30,6 +30,7 @@ func RouteAdmin() {
 	http.HandleFunc("/admin/handle-upsert-article", c.HandleUpsertArticle)
 	http.HandleFunc("/admin/show-article", c.ShowArticle)
 	http.HandleFunc("/admin/del-article", c.DelArticle)
+	http.HandleFunc("/admin/ueditor", c.Ueditor)
 }
 
 // 登陆
@@ -251,6 +252,33 @@ func (this *AdminController) DelArticle(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	this.simpleJsonReturn(w, 200, "")
+}
+
+// 用于处理UEditor的上传图片、视频之类的请求
+func (this *AdminController) Ueditor(w http.ResponseWriter, r *http.Request) {
+	// 检测有没有登陆
+	if _, had := this.hadSignIn(w, r); !had {
+		this.notSignIn(w, r)
+		return
+	}
+	// 获取action和callback参数
+	querys, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		this.jsonReturn(w, map[string]interface{}{"state": err.Error()})
+		return
+	}
+	var action, callback string
+	if len(querys["action"]) > 0 {
+		action = querys["action"][0]
+	}
+	if len(querys["callback"]) > 0 {
+		callback = querys["callback"][0]
+	}
+	// 解析上传文件
+	file, header, _ := r.FormFile("upfile")
+	// 根据action的值执行操作
+	json := adminModel.Ueditor(action, callback, file, header)
+	fmt.Fprint(w, json)
 }
 
 // 检查有没有登陆
